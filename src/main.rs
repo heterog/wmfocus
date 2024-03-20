@@ -220,6 +220,34 @@ fn main() -> Result<()> {
         render_windows.insert(hint, render_window);
     }
 
+    let try_focus_window = |rw: &RenderWindow| -> Result<()> {
+        info!("Found matching window, focusing");
+        if app_config.print_only {
+            println!("0x{:x}", rw.desktop_window.x_window_id.unwrap_or(0));
+        } else if app_config.swap {
+            let Some(active_window) =
+                desktop_windows.iter().find(|window| window.is_focused)
+            else {
+                warn!("There's no active window.");
+                return Ok(());
+            };
+            wm::swap_windows(active_window, rw.desktop_window)
+                .context("Couldn't swap windows")?;
+        } else {
+            wm::focus_window(rw.desktop_window).context("Couldn't focus window")?;
+        }
+        Ok(())
+    };
+
+
+    if ! app_config.pressed_chars.is_empty() {
+        if let Some(rw) = &render_windows.get(&app_config.pressed_chars) {
+            try_focus_window(rw)?;
+        }
+        // TODO: return Err?
+        return Ok(());
+    }
+
     // Receive keyboard events.
     utils::snatch_keyboard(&conn, screen, Duration::from_secs(1))?;
 
@@ -293,22 +321,7 @@ fn main() -> Result<()> {
                     if sequence.is_started() {
                         utils::remove_last_key(&mut pressed_keys, &kstr);
                     } else if let Some(rw) = &render_windows.get(&pressed_keys) {
-                        info!("Found matching window, focusing");
-                        if app_config.print_only {
-                            println!("0x{:x}", rw.desktop_window.x_window_id.unwrap_or(0));
-                        } else if app_config.swap {
-                            let Some(active_window) =
-                                desktop_windows.iter().find(|window| window.is_focused)
-                            else {
-                                warn!("There's no active window.");
-                                closed = true;
-                                continue;
-                            };
-                            wm::swap_windows(active_window, rw.desktop_window)
-                                .context("Couldn't swap windows")?;
-                        } else {
-                            wm::focus_window(rw.desktop_window).context("Couldn't focus window")?;
-                        }
+                        try_focus_window(rw)?;
                         closed = true;
                     } else if !pressed_keys.is_empty()
                         && render_windows.keys().any(|k| k.starts_with(&pressed_keys))

@@ -125,6 +125,10 @@ pub struct AppConfig {
     #[arg(short = 'c', long = "chars", default_value = "sadfjklewcmpgh")]
     pub hint_chars: String,
 
+    /// Which keys to be pressed simulately
+    #[arg(short = 'k', long = "press", default_value = "")]
+    pub pressed_chars: String,
+
     /// Add an additional margin around the text box (value is a factor of the box size)
     #[arg(short, long, default_value = "0.2")]
     pub margin: f32,
