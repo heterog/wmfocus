@@ -84,6 +84,7 @@ fn crawl_windows(root_node: &Node, workspace: &Workspace) -> Result<Vec<DesktopW
                     pos: (pos_x, pos_y),
                     size: (size_x, (node.rect.3 + node.deco_rect.3)),
                     is_focused: node.focused,
+                    workspace: workspace.num,
                 };
                 debug!("Found {:?}", window);
                 windows.push(window);
@@ -95,14 +96,16 @@ fn crawl_windows(root_node: &Node, workspace: &Workspace) -> Result<Vec<DesktopW
 }
 
 /// Return a list of all windows.
-pub fn get_windows() -> Result<Vec<DesktopWindow>> {
+pub fn get_windows(active_only: bool) -> Result<Vec<DesktopWindow>> {
     // Establish a connection to i3 over a unix socket
     let mut connection = I3Connection::connect().context("Couldn't acquire i3 connection")?;
     let workspaces = connection
         .get_workspaces()
         .context("Problem communicating with i3")?
         .workspaces;
-    let visible_workspaces = workspaces.iter().filter(|w| w.visible);
+    let visible_workspaces = workspaces.iter().filter(|w| {
+        if active_only { w.focused } else { w.visible }
+    });
     let root_node = connection.get_tree()?;
     let mut windows = vec![];
     for workspace in visible_workspaces {

@@ -253,6 +253,7 @@ pub fn snatch_mouse(conn: &impl Connection, screen: &Screen, timeout: Duration) 
 pub fn sort_by_pos(mut dws: Vec<DesktopWindow>) -> Vec<DesktopWindow> {
     dws.sort_by_key(|w| w.pos.0);
     dws.sort_by_key(|w| w.pos.1);
+    dws.sort_by_key(|w| w.workspace);
     dws
 }
 

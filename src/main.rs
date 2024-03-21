@@ -33,6 +33,7 @@ pub struct DesktopWindow {
     pos: (i32, i32),
     size: (i32, i32),
     is_focused: bool,
+    workspace: i32,
 }
 
 #[derive(Debug)]
@@ -49,7 +50,8 @@ fn main() -> Result<()> {
     let app_config = args::parse_args();
 
     // Get the windows from each specific window manager implementation.
-    let desktop_windows_raw = wm::get_windows().context("Couldn't get desktop windows")?;
+    let desktop_windows_raw = wm::get_windows(app_config.active_only)
+        .context("Couldn't get desktop windows")?;
 
     // Sort by position to make hint position more deterministic.
     let desktop_windows = utils::sort_by_pos(desktop_windows_raw);

@@ -230,6 +230,10 @@ pub struct AppConfig {
     /// If this flag is set, the currently active window will swap with the selected window.
     #[arg(short, long)]
     pub swap: bool,
+
+    /// If this flag is set, only show keys in current active workspace, instead of all (useful in multi monitors)
+    #[arg(short, long)]
+    pub active_only: bool,
 }
 
 pub fn parse_args() -> AppConfig {
