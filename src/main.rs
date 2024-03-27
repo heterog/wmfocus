@@ -42,6 +42,7 @@ pub struct RenderWindow<'a> {
     cairo_context: cairo::Context,
     draw_pos: (f64, f64),
     rect: (i32, i32, i32, i32),
+    xcb_window_id: u32,
 }
 
 #[cfg(any(feature = "i3", feature = "add_some_other_wm_here"))]
@@ -217,6 +218,7 @@ fn main() -> Result<()> {
             cairo_context,
             draw_pos,
             rect: (x.into(), y.into(), width.into(), height.into()),
+            xcb_window_id,
         };
 
         render_windows.insert(hint, render_window);
@@ -224,6 +226,13 @@ fn main() -> Result<()> {
 
     let try_focus_window = |rw: &RenderWindow| -> Result<()> {
         info!("Found matching window, focusing");
+
+        // @see https://github.com/svenstaro/wmfocus/issues/213
+        for (_, rw) in &render_windows {
+            conn.unmap_window(rw.xcb_window_id)?;
+        }
+        conn.flush()?;
+
         if app_config.print_only {
             println!("0x{:x}", rw.desktop_window.x_window_id.unwrap_or(0));
         } else if app_config.swap {
